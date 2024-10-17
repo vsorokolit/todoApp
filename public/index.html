@@ -16,7 +16,7 @@ README:
 <html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Задачник</title>
+    <title>Tasker</title>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <style>
         *{
@@ -260,7 +260,7 @@ README:
         <div class="wrapper" v-else-if="step === 'items'">
             <h3>Добавить новую задачу:</h3>
             <label style="display: flex;">
-                <input @keyup.enter="addTask" class="new_todo" autofocus autocomplete="on" placeholder="выгулять кота соседа"
+                <input @keyup.enter="addTask" class="new_todo" autofocus autocomplete="on" placeholder="вигуляти кота"
                     type="text" v-model="new_task.text">
                 <span><button @click="addTask" class="button new_todo_button">Добавить</button></span>
             </label>
