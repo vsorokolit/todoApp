@@ -8,22 +8,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const User_1 = require("../../../models/User");
+const User_1 = __importDefault(require("../../../models/User"));
 const router = (0, express_1.Router)();
 router.post("/", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("req.body: ");
     console.log(req.body);
-    const { login, pass } = req.body;
+    const login = req.body.login, password = req.body.pass;
     try {
-        const user = yield User_1.User.findOne({ login });
-        if (user && user.password === pass) {
-            req.session.user = { login };
-            res.json({ ok: true, message: "Logged in successfully" });
+        // Знаходимо користувача за логіном
+        const user = yield User_1.default.findOne({ login });
+        if (!user) {
+            res.status(401).json({ ok: false, message: "Invalid credentials" });
+        }
+        else if (user.password !== password) {
+            console.log("№№№№№№№№№№№№№ Хуйня пароль №№№№№№№№№№№№№№№№");
+            console.log("user.password: " + user.password);
+            console.log("password: " + password);
+            // Перевіряємо пароль
+            res.status(401).json({ ok: false, message: "Invalid credentials" });
         }
         else {
-            res.status(401).json({ ok: false, message: "Invalid credentials" });
+            // Якщо всі перевірки пройшли успішно
+            res.status(200).json({ ok: true, message: "Logged in successfully" });
         }
     }
     catch (error) {

@@ -8,21 +8,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const User_1 = require("../../../models/User");
+const User_1 = __importDefault(require("../../../models/User"));
 const router = (0, express_1.Router)();
 router.post("/", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { login, password } = req.body;
-    const user = new User_1.User({ login, password });
+    const login = req.body.login, password = req.body.pass;
+    console.log(login);
+    console.log(password);
     try {
-        yield user.save();
-        console.log("user saved ##########################");
-        res.status(200).json({ ok: true });
+        const existingUser = yield User_1.default.findOne({ login });
+        if (existingUser) {
+            res.status(400).json({ ok: false, message: "User already exists" });
+        }
+        else {
+            const newUser = new User_1.default({ login, password });
+            yield newUser.save();
+            res.status(201).json({ ok: true, message: "User registered successfully" });
+        }
     }
     catch (error) {
-        console.log("user NOT saved ##########################");
-        res.status(200).json({ error: false });
+        console.error("Error during registration:", error);
+        res.status(500).json({ ok: false, message: "Internal server error" });
     }
 }));
 exports.default = router;

@@ -31,14 +31,15 @@ app.use((0, express_session_1.default)({
     store: new FileStoreInstance({}),
     secret: "keyboard cat",
     resave: true,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: { maxAge: 360000 },
 }));
 // конектим монгодб
+const db = "mongodb+srv://vsorokolit:blablabla123@clusterv.wsxg0.mongodb.net/todoAppDB?retryWrites=true&w=majority&appName=ClusterV";
 mongoose_1.default
-    .connect("mongodb://localhost:27017/your-database-name", {})
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error("MongoDB connection error:", err));
+    .connect(db)
+    .then((res) => console.log("Connected to DB hh"))
+    .catch((error) => console.log(error));
 // Підключаємо маршрути
 app.use("/", index_1.default);
 app.use("/users", users_1.default);
