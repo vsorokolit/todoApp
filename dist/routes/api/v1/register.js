@@ -17,8 +17,6 @@ const User_1 = __importDefault(require("../../../models/User"));
 const router = (0, express_1.Router)();
 router.post("/", (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const login = req.body.login, password = req.body.pass;
-    console.log(login);
-    console.log(password);
     try {
         const existingUser = yield User_1.default.findOne({ login });
         if (existingUser) {
@@ -27,11 +25,12 @@ router.post("/", (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         else {
             const newUser = new User_1.default({ login, password });
             yield newUser.save();
-            res.status(201).json({ ok: true, message: "User registered successfully" });
+            res
+                .status(201)
+                .json({ ok: true, message: "User registered successfully" });
         }
     }
     catch (error) {
-        console.error("Error during registration:", error);
         res.status(500).json({ ok: false, message: "Internal server error" });
     }
 }));

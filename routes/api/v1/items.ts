@@ -1,70 +1,109 @@
 import { Router, Request, Response, NextFunction } from "express";
-import isAuthenticated from "../../../src/api/v1/auth";
+import isAuthenticated from "../../../src/auth";
+import User from "../../../models/User";
 
 const router = Router();
 
 let taskList = {
   items: [
-    { id: 1, text: "зробити щось одне", checked: false },
-    { id: 2, text: "зробити щось друге", checked: false },
-    { id: 3, text: "зробити щось третє", checked: false },
+    { id: 1, text: "залогінься", checked: false },
+    { id: 2, text: "залогінься", checked: false },
+    { id: 3, text: "залогінься", checked: false },
   ],
 };
-let itemsID = 3;
 
-router.get("/", (req: Request, res: Response, next: NextFunction) => {
-  res.json(taskList);
-});
-
-router.post("/", isAuthenticated, (req: Request, res: Response, next: NextFunction) => {
-  const { text } = req.body;
-  console.log(req.body);
-  itemsID++;
-  taskList.items.push({
-    id: itemsID,
-    text: text + " " + itemsID,
-    checked: false,
-  });
-  res.json({ id: itemsID });
-});
-
-router.put("/", isAuthenticated, (req: Request, res: Response, next: NextFunction) => {
-  const { text, id, checked } = req.body;
-
-  console.log("req.body: ");
-  console.log(req.body);
-
-  let searchItem = taskList.items.find((item) => item.id == id);
-  console.log("searchItem: ");
-  console.log(searchItem);
-
-  if (searchItem === undefined) {
-    res.json({ error: false });
+//get all items
+router.get("/", async (req: Request, res: Response, next: NextFunction) => {
+  const user = await User.findById(req.session.user?.id);
+  if (user == null) {
+    res.json(taskList);
   } else {
-    searchItem.text = text;
-    searchItem.checked = checked;
-    console.log("searchItem: ");
-    console.log(searchItem);
-    res.json({ ok: true });
+    res.json(user.taskList);
   }
 });
 
-router.delete("/", isAuthenticated, (req: Request, res: Response, next: NextFunction) => {
-  const { text, id, checked } = req.body;
+//put item
+router.post(
+  "/",
+  isAuthenticated,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await User.findById(req.session.user?.id);
+      const { text } = req.body;
 
-  console.log("req.body: ");
-  console.log(req.body);
+      if (user != null) {
+        user.taskList.items.push({
+          id: ++user.taskList.lastItemID,
+          text: text,
+          checked: false,
+        });
 
-  let itemIndex = taskList.items.findIndex((item) => item.id == id);
-  console.log("itemIndex: ");
-  console.log(itemIndex);
-
-  if (itemIndex === -1) {
-    res.json({ error: false });
-  } else {
-    taskList.items.splice(itemIndex, 1);
-    res.json({ ok: true });
+        await user.save();
+        res.json({ id: user.taskList.lastItemID });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Сталася помилка при додаванні завдання." });
+    }
   }
-});
+);
+
+//change item
+router.put(
+  "/",
+  isAuthenticated,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await User.findById(req.session.user?.id);
+      const { text, id, checked } = req.body;
+
+      if (user != null) {
+        const task = user.taskList.items.find((item) => item.id === id);
+        if (task != undefined) {
+          task.text = text;
+          task.checked = checked;
+        }
+        await user.save();
+
+        res.json({ ok: true });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Сталася помилка при оновленні завдання." });
+    }
+  }
+);
+
+//delete item
+router.delete(
+  "/",
+  isAuthenticated,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await User.findById(req.session.user?.id);
+      const { id } = req.body;
+
+      if (user != null) {
+        const taskIndex = user.taskList.items.findIndex(
+          (item) => item.id === Number(id)
+        );
+        if (taskIndex === -1) {
+          res.status(404).json({ message: "Завдання не знайдено." });
+        } else {
+          user.taskList.items.splice(taskIndex, 1);
+          await user.save();
+
+          res.json({ ok: true });
+        }
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Сталася помилка при видаленні завдання." });
+    }
+  }
+);
 
 export default router;
